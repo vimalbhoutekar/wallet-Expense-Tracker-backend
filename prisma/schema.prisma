@@ -162,3 +162,13 @@ model SystemSetting {
   @@id([settingId])
   @@map("system_setting")
 }
+
+// Transaction Model for Wallet and Expense Tracker
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  title     String
+  amount    Float
+  type      String
+  createdAt DateTime @default(now())
+}
