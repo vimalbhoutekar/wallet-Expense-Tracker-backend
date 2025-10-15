@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -10,6 +18,11 @@ export class TransactionsController {
   @Post()
   create(@Body() createTransactionDto: CreateTransactionDto) {
     return this.transactionsService.create(createTransactionDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.transactionsService.findAll();
   }
 
   @Get('balance')
@@ -21,7 +34,6 @@ export class TransactionsController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.transactionsService.findOne(id);
   }
-
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
