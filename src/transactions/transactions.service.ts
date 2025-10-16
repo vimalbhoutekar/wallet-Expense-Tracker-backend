@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { PrismaService } from './../prisma';
 
@@ -6,32 +6,48 @@ import { PrismaService } from './../prisma';
 export class TransactionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: CreateTransactionDto) {
+  async create(data: CreateTransactionDto) {
+    const transactions = await this.prisma.transaction.findMany();
+
+    const income = transactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const expense = transactions
+      .filter((t) => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const currentBalance = income - expense;
+
+    if (data.type === 'expense' && data.amount > currentBalance) {
+      throw new Error('Insufficient balance! Cannot make this expense.');
+    }
+
     return this.prisma.transaction.create({
       data: data,
     });
   }
 
-  findOne(id: number) {
-    return this.prisma.transaction.findUnique({
-      where: { id: id },
+  async findOne(id: number) {
+     const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
     });
+
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ID ${id} not found in database`);
+    }
+
+    return transaction;
   }
 
-  findAll() {
-    return this.prisma.transaction.findMany({
+  async findAll() {
+    return await this.prisma.transaction.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async remove(id: number) {
-    const existing = await this.prisma.transaction.findUnique({
-      where: { id: id },
-    });
-    if (!existing) {
-      throw new Error('Transaction not found');
-    }
-    return this.prisma.transaction.delete({
+    return await this.prisma.transaction.delete({
       where: { id: id },
     });
   }
